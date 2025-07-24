@@ -1,0 +1,590 @@
+// import React, { useEffect, useState } from "react";
+// import WaterLabFormButtonConatiner from "../../../../../../../components/shared/WaterLabFormsButtonContainer/WaterLabFormButtonConatiner";
+// import MassCurveCss from "./MassCurveCss";
+// import InputTextField from "../../../../../../../components/shared/inputTextField/inputTextField";
+
+// interface ICurveTable {
+//   setCurveTableform: React.Dispatch<React.SetStateAction<boolean>>;
+//   population: number | string;
+//   setPopulation: React.Dispatch<React.SetStateAction<number | string>>;
+
+//   demand: number | string;
+//   setDemand: React.Dispatch<React.SetStateAction<number | string>>;
+
+//   hourSupply: number | string;
+//   setHourSupply: React.Dispatch<React.SetStateAction<number | string>>;
+
+//   avgSupply: number;
+//   setAvgSupply: React.Dispatch<React.SetStateAction<number>>;
+
+//   existingCapacity: number | string;
+//   setExistingCapacity: React.Dispatch<React.SetStateAction<number | string>>;
+// }
+
+// const CurveTableform = ({
+//   setCurveTableform,
+//   population,
+//   setPopulation,
+//   demand,
+//   setDemand,
+//   hourSupply,
+//   setHourSupply,
+//   avgSupply,
+//   setAvgSupply,
+//   existingCapacity,
+//   setExistingCapacity,
+//   fetchedDemandData,
+//   fetchedOperationData,
+//   selectedDemandPattern,
+//   selectedTimePattern,
+// }: ICurveTable) => {
+
+//   console.log(avgSupply,demand,hourSupply)
+//   const classes = MassCurveCss();
+//   const [time, setTime] = useState(Array.from({ length: 24 }, (_, i) => i + 1));
+//   const [demandValues, setDemandValues] = useState(
+//     Array.from({ length: 24 }, () => "")
+//   );
+//   const [netHourlyInflow, setNetHourlyInflow] = useState(
+//     Array.from({ length: 24 }, () => "0")
+//   );
+//   const [netHourlyOutflow, setNetHourlyOutflow] = useState<string[]>(
+//     Array(24).fill("0")
+//   ); // Renamed from netHourly2
+//   const [tankVolume, setTankVolume] = useState(
+//     Array.from({ length: 24 }, () => "10")
+//   );
+//   const [inflow, setInflow] = useState(Array.from({ length: 24 }, () => "12"));
+//   const [outflow, setOutflow] = useState(Array.from({ length: 24 }, () => "0"));
+//   const [difference, setDifference] = useState(
+//     Array.from({ length: 24 }, () => "123")
+//   );
+//   const [totalCapacity1, setTotalCapacity1] = useState(
+//     Array.from({ length: 24 }, () => "0")
+//   );
+//   const [totalCapacity2, setTotalCapacity2] = useState(
+//     Array.from({ length: 24 }, () => "0")
+//   );
+//   // State to store user inputs for time and demand
+//   const [tableData, setTableData] = useState(
+//     Array.from({ length: 24 }, (_, i) => ({
+//       time: i + 1, // Time from 0 to 24
+//       demand: "", // User input for demand
+//       netHourlyInflow: "0",
+//       netHourly2: "0",
+//       tankVolume: "10",
+//       inflow: "12",
+//       outflow: "0",
+//       difference: "123",
+//       totalCapacity1: "0",
+//       totalCapacity2: "0",
+//     }))
+//   );
+
+//   // Array of header labels
+
+//   const headerLabels = [
+//     "Time",
+//     "Demand",
+//     "Net Hourly InFlow",
+//     "Net Hourly OutFlow",
+//     "Tank Volume",
+//     "Inflow",
+//     "Outflow",
+//     "Difference",
+//     "Total Capacity (CUM)",
+//     "Total Capacity Required",
+//   ];
+
+//   useEffect(() => {
+//     const newDemandValues = Array(24).fill("0"); // Initialize with default values
+//     selectedDemandPattern?.forEach((pattern) => {
+//       if (pattern.time >= 1 && pattern.time <= 24) {
+//         newDemandValues[pattern.time - 1] = pattern.value; // Update demand values based on time
+//       }
+//     });
+//     setDemandValues(newDemandValues);
+//   }, [selectedDemandPattern]);
+
+//   // Calculate netHourlyInflow values
+
+//   // Update netHourlyInflow when selectedTimePattern changes
+//   useEffect(() => {
+//     const newNetHourlyInflow = selectedTimePattern?.map((pattern) => {
+//       // If the value is "On", return avgSupply; otherwise, return "-"
+//       return pattern.value === "On" ? avgSupply : "-";
+//     });
+//     setNetHourlyInflow(newNetHourlyInflow);
+//   }, [selectedTimePattern, avgSupply]); // Recalculate when selectedTimePattern or avgSupply changes
+
+//   const handleBack = () => {
+//     setCurveTableform(false);
+//   };
+
+//   // Calculate netHourlyOutflow values
+//   useEffect(() => {
+//     const newNetHourlyOutflow = demandValues.map((demandValue) => {
+//       // Convert demandValue, avgSupply, and hourSupply to numbers
+//       const demandValueNum = parseFloat(demandValue);
+//       const avgSupplyNum = parseFloat(avgSupply); // Use avgSupply instead of demand
+//       const hourSupplyNum = parseFloat(hourSupply);
+//       // Calculate netHourlyOutflow using the updated formula
+//       const calculatedValue =
+//         (demandValueNum * avgSupplyNum * hourSupplyNum) / 24;
+
+//       // Return the calculated value as a string
+//       return calculatedValue.toFixed(2); // Round to 2 decimal places
+//     });
+
+//     // Update the netHourlyOutflow state
+//     setNetHourlyOutflow(newNetHourlyOutflow);
+//   }, [demandValues, avgSupply, hourSupply]); // Recalculate when demandValues, avgSupply, or hourSupply changes
+
+//   // Calculate inflow values (cumulative logic)
+
+//   useEffect(() => {
+//     let previousInflowValue = 0; // Temporary variable to store the previous inflow value
+
+//     const newInflow = netHourlyInflow.map((value) => {
+//       // If the value is "-" (indicating "Off"), use the previous inflow value
+//       if (value === "-") {
+//         return previousInflowValue.toFixed(2); // Keep the previous value
+//       }
+//       // Convert the current Net Hourly InFlow value to a number
+//       const currentNetHourlyInFlow = parseFloat(value);
+
+//       // Calculate the cumulative inflow value
+//       const cumulativeValue = previousInflowValue + currentNetHourlyInFlow;
+
+//       // Update the previous inflow value for the next iteration
+//       previousInflowValue = cumulativeValue;
+
+//       return cumulativeValue.toFixed(2); // Round to 2 decimal places
+//     });
+
+//     // Update the inflow state
+//     setInflow(newInflow);
+//   }, [netHourlyInflow]); // Recalculate when netHourlyInflow changes
+
+//   // Calculate outflow values (cumulative logic)
+//   useEffect(() => {
+//     let previousOutflowValue = 0; // Temporary variable to store the previous outflow value
+
+//     const newOutflow = netHourlyOutflow.map((value) => {
+//       // If the value is "0" or "-" (indicating "Off"), use the previous outflow value
+//       if (value === "0" || value === "-") {
+//         return previousOutflowValue.toFixed(2); // Keep the previous value
+//       }
+
+//       // Convert the current Net Hourly OutFlow value to a number
+//       const currentNetHourlyOutFlow = parseFloat(value);
+
+//       // Calculate the cumulative outflow value
+//       const cumulativeValue = previousOutflowValue + currentNetHourlyOutFlow;
+
+//       // Update the previous outflow value for the next iteration
+//       previousOutflowValue = cumulativeValue;
+
+//       return cumulativeValue.toFixed(2); // Round to 2 decimal places
+//     });
+
+//     // Update the outflow state
+//     setOutflow(newOutflow);
+//   }, [netHourlyOutflow]); // Recalculate when netHourlyOutflow changes
+
+//   // Calculate difference values (Inflow - Outflow)
+//   useEffect(() => {
+//     const newDifference = inflow.map((inflowValue, index) => {
+//       // Convert inflow and outflow values to numbers
+//       const inflowNum = parseFloat(inflowValue);
+//       const outflowNum = parseFloat(outflow[index]);
+
+//       // Calculate the difference
+//       const differenceValue = inflowNum - outflowNum;
+
+//       // Return the difference as a string, rounded to 2 decimal places
+//       return differenceValue.toFixed(2);
+//     });
+
+//     // Update the difference state
+//     setDifference(newDifference);
+//   }, [inflow, outflow]); // Recalculate when inflow or outflow changes
+
+//   // Calculate Total Capacity (CUM) values
+//   useEffect(() => {
+//     // Initialize variables to track the largest positive and lowest negative numbers
+//     let largestPositive = { value: -Infinity, index: -1 };
+//     let lowestNegative = { value: Infinity, index: -1 };
+
+//     // Iterate through the difference values to find the largest positive and lowest negative numbers
+//     difference.forEach((diffValue, index) => {
+//       const diffNum = parseFloat(diffValue);
+
+//       // Check for the largest positive number
+//       if (diffNum > largestPositive.value) {
+//         largestPositive.value = diffNum;
+//         largestPositive.index = index;
+//       }
+
+//       // Check for the lowest negative number
+//       if (diffNum < lowestNegative.value) {
+//         lowestNegative.value = diffNum;
+//         lowestNegative.index = index;
+//       }
+//     });
+
+//     // Create a new array for Total Capacity (CUM)
+//     const newTotalCapacity1 = Array(24).fill(""); // Initialize with empty strings
+
+//     // Set the largest positive number in its corresponding row
+//     if (largestPositive.index !== -1) {
+//       newTotalCapacity1[largestPositive.index] =
+//         largestPositive.value.toFixed(2);
+//     }
+
+//     // Set the lowest negative number in its corresponding row
+//     if (lowestNegative.index !== -1) {
+//       newTotalCapacity1[lowestNegative.index] = lowestNegative.value.toFixed(2);
+//     }
+
+//     // Update the totalCapacity1 state
+//     setTotalCapacity1(newTotalCapacity1);
+//   }, [difference]); // Recalculate when difference changes
+
+//   // Calculate Total Capacity Required value
+//   useEffect(() => {
+//     // Initialize variables to track the largest positive and lowest negative numbers
+//     let largestPositive = { value: -Infinity, index: -1 };
+//     let lowestNegative = { value: Infinity, index: -1 };
+
+//     // Iterate through the difference values to find the largest positive and lowest negative numbers
+//     difference.forEach((diffValue, index) => {
+//       const diffNum = parseFloat(diffValue);
+
+//       // Check for the largest positive number
+//       if (diffNum > largestPositive.value) {
+//         largestPositive.value = diffNum;
+//         largestPositive.index = index;
+//       }
+
+//       // Check for the lowest negative number
+//       if (diffNum < lowestNegative.value) {
+//         lowestNegative.value = diffNum;
+//         lowestNegative.index = index;
+//       }
+//     });
+
+//     // Calculate the sum of the largest positive and absolute value of the lowest negative
+//     const sum = largestPositive.value + Math.abs(lowestNegative.value);
+
+//     // Create a new array for Total Capacity Required
+//     const newTotalCapacity2 = Array(24).fill(""); // Initialize with empty strings
+
+//     // Set the sum in the middle row (e.g., row 12 for a 24-row table)
+//     const middleRowIndex = 0; // 0-based index for row 12
+//     newTotalCapacity2[middleRowIndex] = sum.toFixed(2);
+
+//     // Update the totalCapacity2 state
+//     setTotalCapacity2(newTotalCapacity2);
+//   }, [difference]); // Recalculate when difference changes
+
+//   // Calculate Tank Volume values
+//   useEffect(() => {
+//     // Find the smallest number in the Difference column
+//     const smallestDifference = Math.min(
+//       ...difference.map((diff) => parseFloat(diff) || 0)
+//     );
+
+//     // Round the smallest number up to the nearest hundred and take its absolute value
+//     const roundedSmallestNumber =
+//       Math.ceil(Math.abs(smallestDifference) / 100) * 100;
+
+//     // Initialize the Tank Volume array
+//     const newTankVolume = Array(24).fill("");
+
+//     // Calculate Tank Volume for each row
+//     let previousTankVolume = roundedSmallestNumber; // Start with the rounded smallest number
+//     for (let i = 0; i < 24; i++) {
+//       // Treat "-" as 0 for Net Hourly Inflow and Net Hourly Outflow
+//       const netHourlyInFlow =
+//         netHourlyInflow[i] === "-" ? 0 : parseFloat(netHourlyInflow[i] || "0");
+//       const netHourlyOutFlow =
+//         netHourlyOutflow[i] === "-"
+//           ? 0
+//           : parseFloat(netHourlyOutflow[i] || "0");
+
+//       // Calculate Tank Volume for the current row
+//       const tankVolumeValue =
+//         previousTankVolume + netHourlyInFlow - netHourlyOutFlow;
+
+//       // Update the Tank Volume array
+//       newTankVolume[i] = tankVolumeValue.toFixed(2);
+
+//       // Update the previous Tank Volume for the next iteration
+//       previousTankVolume = tankVolumeValue;
+//     }
+
+//     // Update the tankVolume state
+//     setTankVolume(newTankVolume);
+//   }, [difference, netHourlyInflow, netHourlyOutflow]); // Recalculate when difference, netHourlyInflow, or netHourlyOutflow changes
+
+//   // useEffect(() => {
+//   //   // Step 1: Calculate Demand Values
+//   //   const newDemandValues = Array(24).fill("0");
+//   //   selectedDemandPattern.forEach((pattern) => {
+//   //     if (pattern.time >= 1 && pattern.time <= 24) {
+//   //       newDemandValues[pattern.time - 1] = pattern.value;
+//   //     }
+//   //   });
+//   //   setDemandValues(newDemandValues);
+
+//   //   // Step 2: Calculate Net Hourly Inflow
+//   //   const newNetHourlyInflow = selectedTimePattern.map((pattern) =>
+//   //     pattern.value === "On" ? avgSupply : "-"
+//   //   );
+//   //   setNetHourlyInflow(newNetHourlyInflow);
+
+//   //   // Step 3: Calculate Net Hourly Outflow
+//   //   const newNetHourlyOutflow = newDemandValues.map((demandValue) => {
+//   //     const demandValueNum = parseFloat(demandValue);
+//   //     const demandNum = parseFloat(demand);
+//   //     const hourSupplyNum = parseFloat(hourSupply);
+//   //     return ((demandValueNum * demandNum * hourSupplyNum) / 24).toFixed(2);
+//   //   });
+//   //   setNetHourlyOutflow(newNetHourlyOutflow);
+
+//   //   // Step 4: Calculate Inflow (Cumulative Logic)
+//   //   let previousInflowValue = 0;
+//   //   const newInflow = newNetHourlyInflow.map((value) => {
+//   //     if (value === "-") return previousInflowValue.toFixed(2);
+//   //     const currentNetHourlyInFlow = parseFloat(value);
+//   //     const cumulativeValue = previousInflowValue + currentNetHourlyInFlow;
+//   //     previousInflowValue = cumulativeValue;
+//   //     return cumulativeValue.toFixed(2);
+//   //   });
+//   //   setInflow(newInflow);
+
+//   //   // Step 5: Calculate Outflow (Cumulative Logic)
+//   //   let previousOutflowValue = 0;
+//   //   const newOutflow = newNetHourlyOutflow.map((value) => {
+//   //     if (value === "0" || value === "-") return previousOutflowValue.toFixed(2);
+//   //     const currentNetHourlyOutFlow = parseFloat(value);
+//   //     const cumulativeValue = previousOutflowValue + currentNetHourlyOutFlow;
+//   //     previousOutflowValue = cumulativeValue;
+//   //     return cumulativeValue.toFixed(2);
+//   //   });
+//   //   setOutflow(newOutflow);
+
+//   //   // Step 6: Calculate Difference (Inflow - Outflow)
+//   //   const newDifference = newInflow.map((inflowValue, index) => {
+//   //     const inflowNum = parseFloat(inflowValue);
+//   //     const outflowNum = parseFloat(newOutflow[index]);
+//   //     return (inflowNum - outflowNum).toFixed(2);
+//   //   });
+//   //   setDifference(newDifference);
+
+//   //   // Step 7: Calculate Total Capacity (CUM)
+//   //   const largestPositive = { value: -Infinity, index: -1 };
+//   //   const lowestNegative = { value: Infinity, index: -1 };
+//   //   newDifference.forEach((diffValue, index) => {
+//   //     const diffNum = parseFloat(diffValue);
+//   //     if (diffNum > largestPositive.value) {
+//   //       largestPositive.value = diffNum;
+//   //       largestPositive.index = index;
+//   //     }
+//   //     if (diffNum < lowestNegative.value) {
+//   //       lowestNegative.value = diffNum;
+//   //       lowestNegative.index = index;
+//   //     }
+//   //   });
+//   //   const newTotalCapacity1 = Array(24).fill("");
+//   //   if (largestPositive.index !== -1) {
+//   //     newTotalCapacity1[largestPositive.index] = largestPositive.value.toFixed(2);
+//   //   }
+//   //   if (lowestNegative.index !== -1) {
+//   //     newTotalCapacity1[lowestNegative.index] = lowestNegative.value.toFixed(2);
+//   //   }
+//   //   setTotalCapacity1(newTotalCapacity1);
+
+//   //   // Step 8: Calculate Total Capacity Required
+//   //   const sum = largestPositive.value + Math.abs(lowestNegative.value);
+//   //   const newTotalCapacity2 = Array(24).fill("");
+//   //   const middleRowIndex = 11; // 0-based index for row 12
+//   //   newTotalCapacity2[middleRowIndex] = sum.toFixed(2);
+//   //   setTotalCapacity2(newTotalCapacity2);
+
+//   //   // Step 9: Calculate Tank Volume
+//   //   const smallestDifference = Math.min(...newDifference.map((diff) => parseFloat(diff) || 0));
+//   //   const roundedSmallestNumber = Math.ceil(Math.abs(smallestDifference) / 100) * 100;
+//   //   let previousTankVolume = roundedSmallestNumber;
+//   //   const newTankVolume = newDifference.map((_, index) => {
+//   //     const netHourlyInFlow = newNetHourlyInflow[index] === "-" ? 0 : parseFloat(newNetHourlyInflow[index] || "0");
+//   //     const netHourlyOutFlow = newNetHourlyOutflow[index] === "-" ? 0 : parseFloat(newNetHourlyOutflow[index] || "0");
+//   //     const tankVolumeValue = previousTankVolume + netHourlyInFlow - netHourlyOutFlow;
+//   //     previousTankVolume = tankVolumeValue;
+//   //     return tankVolumeValue.toFixed(2);
+//   //   });
+//   //   setTankVolume(newTankVolume);
+//   // }, [selectedDemandPattern, selectedTimePattern, avgSupply, demand, hourSupply]); // Dependencies
+
+//   return (
+//     <div className={classes.MassCurveMain}>
+//       <div
+//         className={classes.Body}
+//         style={{
+//           width: "100%",
+//           height: "81%",
+//           overflowY: "scroll",
+//           border: "1px solid #ccc",
+//           borderRadius: "5px",
+//           boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+//         }}
+//       >
+//         <table
+//           style={{
+//             width: "100%",
+//             borderCollapse: "collapse",
+//             overflowX: "scroll",
+//           }}
+//         >
+//           <thead>
+//             <tr
+//               style={{
+//                 // background: "linear-gradient(135deg, #6a11cb, #2575fc)",
+//                 color: "white",
+//                 textAlign: "center",
+//                 fontWeight: "600",
+//                 padding:"10px"
+//               }}
+//             >
+//               {headerLabels.map((label, index) => (
+//                 <th key={index} className={classes.stickyHeader}>
+//                   {label}
+//                 </th>
+//               ))}
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {time.map((_, index) => (
+//               <tr key={index}  style={{
+//                 textAlign: "center",
+//                 backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
+//                 transition: "background-color 0.3s ease",
+//               }}>
+//                 {/* Time */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {time[index]}
+//                 </td>
+//                 {/* Demand */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {demandValues[index]}
+//                 </td>
+//                 {/* Net Hourly InFlow */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {netHourlyInflow[index]}
+//                 </td>
+//                 {/* Net Hourly OutFlow */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {netHourlyOutflow[index]}
+//                 </td>
+//                 {/* Tank Volume */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {tankVolume[index]}
+//                 </td>
+//                 {/* Inflow */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {inflow[index]}{" "}
+//                 </td>
+//                 {/* Outflow */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {outflow[index]}
+//                 </td>
+//                 {/* Difference */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {difference[index]}
+//                 </td>
+//                 {/* Total Capacity (CUM) */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {totalCapacity1[index]}
+//                 </td>
+//                 {/* Total Capacity Required */}
+//                 <td
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: "8px",
+//                     fontFamily: "sans-serif",
+//                   }}
+//                 >
+//                   {totalCapacity2[index]}
+//                 </td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+
+//       {/* Button Container */}
+//       <WaterLabFormButtonConatiner
+//         handleCancleClick={() => console.log("Cancelled")}
+//         handleBackClick={handleBack}
+//         nextButtonName="Submit"
+//       />
+//     </div>
+//   );
+// };
+
+// export default CurveTableform;
