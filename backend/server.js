@@ -9,6 +9,7 @@ const { Socket } = require("socket.io");
 const testdata=require("./testData")
 const {DemandData}=require("./testData")
 const {OprationData}=require("./testData");
+const port = process.env.PORT || 5000;
 const { saveforcast, getForcast, updateForcast, deleteForcast, findd, insertdata, insertManydata } = require("./controller/forcastController");
 connectDB();
 const app = express();
@@ -46,7 +47,7 @@ app.get("/forcastfind/:project_id", findd);
 app.get("/forcastinsert",insertdata);
 app.get("/forcastinsertmany",insertManydata);
 
-const server=app.listen(5000, () => { 
+const server=app.listen(port, () => { 
 });
 
 const io=require('socket.io')(server,{
