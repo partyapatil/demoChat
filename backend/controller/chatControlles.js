@@ -133,7 +133,7 @@ const renameGroup = expressAsyncHandler(async (req, res) => {
 const removeFromGroup = expressAsyncHandler(async (req, res) => {
   const { chatId, userId } = req.body;
   // check if the requester is admin
-
+  console.log("called");
   const removed = await Chat.findByIdAndUpdate(
     chatId,
     {
@@ -145,7 +145,6 @@ const removeFromGroup = expressAsyncHandler(async (req, res) => {
   )
     .populate("users", "-password")
     .populate("groupAdmin", "-password");
-  console.log(removed);
   if (!removed) {
     res.status(404);
     throw new Error("Chat Not Found");

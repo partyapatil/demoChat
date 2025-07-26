@@ -13,7 +13,11 @@ const { saveforcast, getForcast, updateForcast, deleteForcast, findd, insertdata
 connectDB();
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000",
+methods:["GET","POST","PUT","DELETE"],
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use("/api", userRouter);
@@ -48,7 +52,9 @@ const server=app.listen(5000, () => {
 const io=require('socket.io')(server,{
   pingTimeout:60000,
 cors:{
-origin:"http://localhost:3000"
+  origin: "http://localhost:3000", // match exactly!
+methods:["GET","POST","PUT","DELETE"],
+credentials:true
 }
 })
 // io.on("connection", (socket) => {
