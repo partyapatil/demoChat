@@ -15,7 +15,7 @@ connectDB();
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "https://prathameshschat.netlify.app"],
 methods:["GET","POST","PUT","DELETE"],
   credentials: true,
 }));
@@ -53,7 +53,7 @@ const server=app.listen(port, () => {
 const io=require('socket.io')(server,{
   pingTimeout:60000,
 cors:{
-  origin: "http://localhost:3000", // match exactly!
+  origin: ["http://localhost:3000", "https://prathameshschat.netlify.app"],
 methods:["GET","POST","PUT","DELETE"],
 credentials:true
 }
